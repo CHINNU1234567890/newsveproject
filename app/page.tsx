@@ -1,305 +1,402 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { MapPin, Phone, Mail, Clock, Send, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
-import { ChevronRight, CheckCircle2 } from 'lucide-react';
-import { useServiceRequest } from '@/contexts/ServiceRequestContext';
 import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 
-// No need to import images in Next.js App Router - they can be referenced directly
+// Form validation schema
+const contactFormSchema = z.object({
+  name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
+  email: z.string().email({ message: 'Please enter a valid email address.' }),
+  phone: z.string()
+    .length(10, { message: 'Phone number must be exactly 10 digits.' })
+    .regex(/^[0-9]+$/, { message: 'Phone number can only contain digits.' }),
+  service: z.string({ required_error: 'Please select a service.' }),
+  message: z.string().min(10, { message: 'Message must be at least 10 characters.' }),
+});
 
-// Client types for rotating text
-const clientTypes = [
-  'Industries',
-  'Hospitals',
-  'Manufacturers',
-  'Data Centers',
-  'Factories'
-];
-
-export default function Home() {
-  const { openServiceRequest } = useServiceRequest();
-  const [currentClientType, setCurrentClientType] = useState(0);
-  const [selectedClientType, setSelectedClientType] = useState(clientTypes[0]);
-
-  // Rotate through client types every second
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentClientType((prev) => (prev + 1) % clientTypes.length);
-    }, 1000);
+export default function Contact() {
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  
+  // Initialize form
+  const form = useForm<z.infer<typeof contactFormSchema>>({
+    resolver: zodResolver(contactFormSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      service: '',
+      message: '',
+    },
+  });
+  
+  // Handle form submission
+  const onSubmit = async (data: z.infer<typeof contactFormSchema>) => {
+    setIsSubmitting(true);
+    let errorMessage = 'There was an error submitting your message. Please try again or call us directly at +91-9550222151.';
     
-    return () => clearInterval(interval);
-  }, []);
-
-  // Update featured content based on selected client type
-  const getFeaturedContent = () => {
-    switch (selectedClientType) {
-      case 'Industries':
-        return {
-          title: 'Industrial Equipment Erection',
-          description: 'Professional erection of heavy machinery and industrial equipment with precision and care.',
-          features: [
-            'Safe and efficient equipment erection',
-            'Precision alignment and calibration',
-            'Full compliance with industrial standards',
-            'Expert handling of complex machinery'
-          ],
-          service: 'industrial-equipment-erection'
-        };
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      // Always attempt to parse response, but handle parse errors gracefully
+      let result;
+      try {
+        result = await response.json();
+        console.log('Form submission response:', result);
         
-      case 'Hospitals':
-        return {
-          title: 'Medical Equipment Erection',
-          description: 'Specialized erection services for sensitive and complex medical equipment.',
-          features: [
-            'Clean room standards compliance',
-            'Precision erection of diagnostic equipment',
-            'Minimal disruption to healthcare facilities',
-            'Calibration and testing included'
-          ],
-          service: 'medical-equipment-erection'
-        };
-        
-      case 'Manufacturers':
-        return {
-          title: 'Manufacturing Equipment Erection',
-          description: 'Complete production line and manufacturing equipment erection services.',
-          features: [
-            'Assembly line optimization',
-            'Production equipment integration',
-            'Robotic system erection',
-            'Performance testing and validation'
-          ],
-          service: 'industrial-equipment-erection'
-        };
-        
-      case 'Data Centers':
-        return {
-          title: 'Data Center Equipment Erection',
-          description: 'Precise erection of sensitive server racks, cooling systems, and data infrastructure.',
-          features: [
-            'Server rack erection and alignment',
-            'Cooling system integration',
-            'Cable management infrastructure',
-            'Environmental control system setup'
-          ],
-          service: 'data-center-equipment-erection'
-        };
-        
-      case 'Factories':
-        return {
-          title: 'Factory Setup & Equipment Erection',
-          description: 'Complete factory setup including heavy machinery erection and production line integration.',
-          features: [
-            'Turn-key factory setup solutions',
-            'Equipment layout optimization',
-            'Production workflow integration',
-            'Safety system implementation'
-          ],
-          service: 'factory-setup'
-        };
-        
-      default:
-        return {
-          title: 'Equipment Erection Services',
-          description: 'Professional erection services for all types of industrial and commercial equipment.',
-          features: [
-            'Expert equipment handling',
-            'Safety-first approach',
-            '24/7 service availability',
-            'Experienced technical team'
-          ],
-          service: 'heavy-equipment-erection'
-        };
+        // Store the error message if provided by the server
+        if (result.message && !response.ok) {
+          errorMessage = result.message;
+        }
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError);
+        // If we can't parse the response, we'll use the default error message
+      }
+      
+      if (response.ok) {
+        setIsSuccess(true);
+        form.reset();
+        toast({
+          title: 'Message sent!',
+          description: 'Thank you for contacting us. We will get back to you soon.',
+        });
+      } else {
+        // Handle specific HTTP error codes
+        if (response.status === 400) {
+          // Validation error
+          throw new Error(errorMessage || 'Please check your form inputs and try again.');
+        } else if (response.status === 429) {
+          // Rate limiting
+          throw new Error('Too many requests. Please try again later.');
+        } else if (response.status >= 500) {
+          // Server error
+          throw new Error('Our server is experiencing issues. Please try again later or contact us by phone: +91-9550222151');
+        } else {
+          // Other errors
+          throw new Error(errorMessage);
+        }
+      }
+    } catch (error: any) {
+      console.error('Error sending contact form:', error);
+      
+      // Display error message to user
+      toast({
+        title: 'Message failed to send',
+        description: error.message || errorMessage,
+        variant: 'destructive',
+      });
+      
+      // Error UI indicator for better user feedback
+      form.setError('root', { 
+        type: 'server', 
+        message: 'Form submission failed. Please try again or contact us by phone at +91-9550222151.'
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
-
-  const featuredContent = getFeaturedContent();
-
+  
+  // Service options
+  const serviceOptions = [
+    { value: 'heavy-equipment-erection', label: 'Heavy Equipment Erection' },
+    { value: 'industrial-equipment-erection', label: 'Industrial Equipment Erection' },
+    { value: 'medical-equipment-erection', label: 'Medical Equipment Erection' },
+    { value: 'data-center-equipment-erection', label: 'Data Center Equipment Erection' },
+    { value: 'factory-setup', label: 'Factory Setup & Installation' },
+    { value: 'equipment-relocation', label: 'Equipment Relocation' },
+    { value: 'other', label: 'Other Services' },
+  ];
+  
   return (
     <>
-      {/* Hero Section */}
-      <section className="relative min-h-[80vh] flex items-center bg-gradient-to-r from-blue-900 to-blue-800 overflow-hidden">
-        {/* Background Image with Overlay */}
-        <div className="absolute inset-0 z-0">
-          <Image 
-            src="/images/hero-image.jpg"
-            alt="Industrial equipment erection" 
-            fill
-            priority
-            style={{ objectFit: 'cover', objectPosition: 'center' }}
-          />
-          <div className="absolute inset-0 bg-blue-900/70"></div>
+      {/* Page Header */}
+      <section className="bg-gradient-to-r from-blue-900 to-blue-800 py-20 text-white">
+        <div className="container">
+          <h1 className="text-4xl md:text-5xl font-bold">Contact Us</h1>
+          <p className="mt-4 max-w-xl text-blue-100">
+            Reach out to SAI VINAYAKA ENTERPRISES for inquiries about our equipment erection services
+            or to request a quote for your project.
+          </p>
         </div>
-
-        <div className="container relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div className="text-white">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                Professional Equipment 
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-200 to-white"> Erection </span> 
-                Services
-              </h1>
+      </section>
+      
+      {/* Contact Information and Form */}
+      <section className="py-16">
+        <div className="container">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            {/* Contact Information */}
+            <div className="lg:col-span-1">
+              <h2 className="text-2xl font-bold mb-6">Get In Touch</h2>
               
-              <div className="h-10 mt-4">
-                <h2 className="text-xl md:text-2xl font-medium">
-                  Trusted by <span className="text-blue-300">{clientTypes[currentClientType]}</span> Since 2022
-                </h2>
+              <div className="space-y-6">
+                <div className="flex items-start">
+                  <MapPin className="h-6 w-6 text-blue-600 mr-4 mt-1 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-semibold text-gray-800">Our Location</h3>
+                    <address className="not-italic text-gray-600 mt-1">
+                      5-3-171/22, RP ROAD,<br />
+                      JEERA, SECUNDERABAD-500003,<br />
+                      Telangana, India
+                    </address>
+                  </div>
+                </div>
+                
+                <div className="flex items-start">
+                  <Phone className="h-6 w-6 text-blue-600 mr-4 mt-1 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-semibold text-gray-800">Phone</h3>
+                    <p className="text-gray-600 mt-1">
+                      <Link href="tel:+919550222151" className="hover:text-blue-600">
+                        +91-9550222151
+                      </Link>
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start">
+                  <Mail className="h-6 w-6 text-blue-600 mr-4 mt-1 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-semibold text-gray-800">Email</h3>
+                    <p className="text-gray-600 mt-1">
+                      <Link href="mailto:saivinayakaenterprises13@gmail.com" className="hover:text-blue-600">
+                        saivinayakaenterprises13@gmail.com
+                      </Link>
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start">
+                  <Clock className="h-6 w-6 text-blue-600 mr-4 mt-1 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-semibold text-gray-800">Working Hours</h3>
+                    <p className="text-gray-600 mt-1">
+                      24/7 Service<br />
+                      Available 365 days a year
+                    </p>
+                  </div>
+                </div>
               </div>
               
-              <p className="mt-4 text-blue-100 max-w-lg">
-                SAI VINAYAKA ENTERPRISES delivers cutting-edge equipment erection services 
-                with precision and expertise for all industrial, medical, and data center needs.
-              </p>
-              
-              <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                <Button 
-                  size="lg" 
-                  className="bg-white text-blue-900 hover:bg-blue-50"
-                  onClick={() => openServiceRequest()}
-                >
-                  Request a Quote
-                </Button>
-                <Link href="/services">
-                  <Button 
-                    variant="outline" 
-                    size="lg" 
-                    className="border-white text-white hover:bg-white/10"
-                  >
-                    Our Services <ChevronRight className="ml-2 h-4 w-4" />
+              <div className="mt-8 bg-blue-50 p-6 rounded-lg border border-blue-100">
+                <h3 className="font-semibold text-lg mb-2">Emergency Support</h3>
+                <p className="text-gray-700 mb-4">
+                  Need urgent assistance with your equipment? Our technical team is available 24/7.
+                </p>
+                <Link href="tel:+919550222151">
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                    Call Emergency Support
                   </Button>
                 </Link>
               </div>
             </div>
             
-            <div className="hidden lg:block">
-              {/* This div is intentionally left empty for future content */}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Client Type Selection */}
-      <section className="py-8 bg-white">
-        <div className="container">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
-            {clientTypes.map((type) => (
-              <div 
-                key={type}
-                className={`cursor-pointer p-4 rounded-lg text-center transition-all ${
-                  selectedClientType === type 
-                    ? 'bg-blue-600 text-white shadow-lg' 
-                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                }`}
-                onClick={() => setSelectedClientType(type)}
-              >
-                <h3 className="font-medium">{type}</h3>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Service */}
-      <section className="py-16 bg-gray-50">
-        <div className="container">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-3xl font-bold mb-4">{featuredContent.title}</h2>
-              <p className="text-gray-700 mb-6">{featuredContent.description}</p>
+            {/* Contact Form */}
+            <div className="lg:col-span-2 bg-white p-8 rounded-lg border">
+              <h2 className="text-2xl font-bold mb-6">Send Us a Message</h2>
               
-              <ul className="space-y-3 mb-8">
-                {featuredContent.features.map((feature, index) => (
-                  <li key={index} className="flex items-start">
-                    <CheckCircle2 className="h-5 w-5 text-blue-600 mr-2 flex-shrink-0 mt-0.5" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              
-              <Button 
-                className="bg-blue-600 hover:bg-blue-700"
-                onClick={() => openServiceRequest(featuredContent.service)}
-              >
-                Request This Service
-              </Button>
-            </div>
-            
-            <div className="relative h-72 md:h-96 rounded-lg overflow-hidden shadow-lg">
-              {/* Placeholder for future image */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-700 flex items-center justify-center">
-                <p className="text-white text-xl font-medium">Image Coming Soon</p>
-              </div>
+              {isSuccess ? (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+                  <div className="inline-flex items-center justify-center bg-green-100 h-16 w-16 rounded-full mb-4">
+                    <CheckCircle2 className="h-8 w-8 text-green-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">Message Sent Successfully!</h3>
+                  <p className="text-gray-600 mb-4">
+                    Thank you for contacting SAI VINAYAKA ENTERPRISES. We will get back to you as soon as possible.
+                  </p>
+                  <Button 
+                    onClick={() => setIsSuccess(false)}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    Send Another Message
+                  </Button>
+                </div>
+              ) : (
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    {/* Display global error message from form.formState.errors.root */}
+                    {form.formState.errors.root && (
+                      <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md mb-4">
+                        <div className="flex items-start">
+                          <div className="flex-shrink-0">
+                            <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <div className="ml-3">
+                            <p className="text-sm">{form.formState.errors.root.message}</p>
+                            <p className="mt-1 text-xs">Please try again or contact us directly at +91-9550222151</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Full Name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Your name" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Your email address" type="email" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone Number</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">+91</span>
+                                <Input 
+                                  placeholder="Your phone number" 
+                                  className="pl-10" 
+                                  {...field} 
+                                  maxLength={10}
+                                  type="tel"
+                                  pattern="[0-9]{10}"
+                                  onKeyPress={(e) => {
+                                    // Allow only numbers (0-9)
+                                    if (!/[0-9]/.test(e.key)) {
+                                      e.preventDefault();
+                                    }
+                                  }}
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="service"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Service Interested In</FormLabel>
+                            <Select 
+                              onValueChange={field.onChange} 
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a service" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {serviceOptions.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <FormField
+                      control={form.control}
+                      name="message"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Message</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Please describe your project requirements or questions..."
+                              rows={5}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <div className="flex items-center justify-center">
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Sending...
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center">
+                          <Send className="h-5 w-5 mr-2" />
+                          Send Message
+                        </div>
+                      )}
+                    </Button>
+                  </form>
+                </Form>
+              )}
             </div>
           </div>
         </div>
       </section>
-
-      {/* Why Choose Us */}
-      <section className="py-16 bg-white">
+      
+      {/* Map Section */}
+      <section className="py-12 bg-gray-50">
         <div className="container">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Why Choose SAI VINAYAKA ENTERPRISES</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              We deliver excellence in equipment erection with our experienced team, 
-              advanced techniques, and commitment to safety and quality.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              {
-                title: 'Experienced Team',
-                description: 'Our technicians have years of specialized experience in equipment erection across multiple industries.'
-              },
-              {
-                title: '24/7 Availability',
-                description: 'We provide round-the-clock service 365 days a year to meet your urgent equipment erection needs.'
-              },
-              {
-                title: 'Safety Standards',
-                description: 'We maintain the highest safety standards during all equipment erection and setup operations.'
-              },
-              {
-                title: 'Comprehensive Service',
-                description: 'From planning to final testing, we handle every aspect of your equipment erection project.'
-              }
-            ].map((item, index) => (
-              <div key={index} className="p-6 border rounded-lg hover:shadow-md transition-shadow">
-                <h3 className="text-xl font-semibold mb-3">{item.title}</h3>
-                <p className="text-gray-600">{item.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-blue-800 to-blue-900 text-white">
-        <div className="container text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Start Your Project?</h2>
-          <p className="max-w-2xl mx-auto mb-8">
-            Contact us today to discuss your equipment erection needs. Our team is ready to 
-            provide you with professional service and expert solutions.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg" 
-              className="bg-white text-blue-900 hover:bg-blue-50"
-              onClick={() => openServiceRequest()}
-            >
-              Request a Quote
-            </Button>
-            <Link href="/contact">
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="border-white text-white hover:bg-white/10"
-              >
-                Contact Us <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
+          <h2 className="text-2xl font-bold mb-6 text-center">Our Location</h2>
+          <div className="aspect-video w-full rounded-lg overflow-hidden shadow-lg">
+            <iframe 
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3805.9877327574723!2d78.50244827466445!3d17.443869501192513!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb9a42a72bc6e1%3A0x5272c1a67ddb73f1!2sSecunderabad%2C%20Telangana%20500003!5e0!3m2!1sen!2sin!4v1682252400000!5m2!1sen!2sin" 
+              width="100%" 
+              height="100%" 
+              style={{ border: 0 }} 
+              allowFullScreen 
+              loading="lazy" 
+              referrerPolicy="no-referrer-when-downgrade"
+            ></iframe>
           </div>
         </div>
       </section>
