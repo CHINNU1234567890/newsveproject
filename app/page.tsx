@@ -1,213 +1,241 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { useState } from 'react';
+import Link from 'next/link';
 import { ChevronRight, CheckCircle2 } from 'lucide-react';
 import { useServiceRequest } from '@/contexts/ServiceRequestContext';
 import { Button } from '@/components/ui/button';
 
-// Service data
-const services = [
-  {
-    id: 'heavy-equipment-erection',
-    title: 'Heavy Equipment Erection',
-    description: 'Professional erection of large-scale industrial equipment and heavy machinery with precision and safety.',
-    imageUrl: '/images/industrial-equipment.jpeg',
-    features: [
-      'Expert handling of heavy industrial machinery',
-      'Precision alignment and calibration',
-      'Load testing and operational verification',
-      'Comprehensive safety protocols',
-      'Technical documentation and training'
-    ],
-    benefits: [
-      'Minimized downtime during equipment erection',
-      'Extended equipment lifespan through proper setup',
-      'Enhanced operational efficiency',
-      'Compliance with industry standards and regulations'
-    ]
-  },
-  {
-    id: 'industrial-equipment-erection',
-    title: 'Industrial Equipment Erection',
-    description: 'Specialized erection services for manufacturing equipment, production lines, and industrial systems.',
-    imageUrl: '/images/equipment-erection.jpeg',
-    features: [
-      'Production line setup and integration',
-      'Manufacturing equipment erection',
-      'Robotic system installation',
-      'Industrial control system setup',
-      'Performance testing and optimization'
-    ],
-    benefits: [
-      'Streamlined production workflows',
-      'Maximized manufacturing efficiency',
-      'Reduced operational disruptions',
-      'Expert technical guidance throughout the process'
-    ]
-  },
-  {
-    id: 'medical-equipment-erection',
-    title: 'Medical Equipment Erection',
-    description: 'Specialized erection and installation of sensitive medical equipment for hospitals and healthcare facilities.',
-    imageUrl: '/images/medical-equipment.jpeg',
-    features: [
-      'Clean room standard compliance',
-      'Diagnostic equipment erection',
-      'Imaging system installation',
-      'Laboratory equipment setup',
-      'Calibration and certification support'
-    ],
-    benefits: [
-      'Minimal disruption to healthcare operations',
-      'Precise calibration for accurate medical results',
-      'Compliance with healthcare regulations',
-      'Comprehensive staff training options'
-    ]
-  },
-  {
-    id: 'data-center-equipment-erection',
-    title: 'Data Center Equipment Erection',
-    description: 'Expert erection and installation of server racks, cooling systems, and critical IT infrastructure for data centers.',
-    imageUrl: '/images/data-center.jpeg',
-    features: [
-      'Server rack erection and alignment',
-      'Cooling system installation',
-      'Cable management infrastructure',
-      'Power distribution setup',
-      'Environmental control system integration'
-    ],
-    benefits: [
-      'Optimized data center layout for cooling efficiency',
-      'Reduced risk of equipment failure',
-      'Scalable infrastructure design',
-      'Compliance with data center standards'
-    ]
-  },
-  {
-    id: 'factory-setup',
-    title: 'Factory Setup & Installation',
-    description: 'Comprehensive factory setup services including layout planning, equipment erection, and infrastructure integration.',
-    imageUrl: '/images/factory-setup.jpeg',
-    features: [
-      'Factory layout optimization',
-      'Complete production line erection',
-      'Utility system integration',
-      'Safety system implementation',
-      'Workflow testing and validation'
-    ],
-    benefits: [
-      'Turnkey solution for factory establishment',
-      'Optimized production flow',
-      'Reduced timeline for operational readiness',
-      'Integrated systems approach'
-    ]
-  },
-  {
-    id: 'equipment-relocation',
-    title: 'Equipment Relocation',
-    description: 'Specialized services for dismantling, transporting, and re-erecting equipment to new locations.',
-    imageUrl: '/images/equipment-erection.jpeg',
-    features: [
-      'Systematic equipment dismantling',
-      'Secure packaging and transportation',
-      'Professional re-erection at new location',
-      'Recalibration and testing',
-      'Minimal operational disruption'
-    ],
-    benefits: [
-      'Reduced risk of equipment damage during moves',
-      'Faster return to operational status',
-      'Professional project management',
-      'Comprehensive documentation of the process'
-    ]
-  }
+// No need to import images in Next.js App Router - they can be referenced directly
+
+// Client types for rotating text
+const clientTypes = [
+  'Industries',
+  'Hospitals',
+  'Manufacturers',
+  'Data Centers',
+  'Factories'
 ];
 
-export default function Services() {
+export default function Home() {
   const { openServiceRequest } = useServiceRequest();
-  const [selectedService, setSelectedService] = useState(services[0]);
-  
+  const [currentClientType, setCurrentClientType] = useState(0);
+  const [selectedClientType, setSelectedClientType] = useState(clientTypes[0]);
+
+  // Rotate through client types every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentClientType((prev) => (prev + 1) % clientTypes.length);
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  // Update featured content based on selected client type
+  const getFeaturedContent = () => {
+    switch (selectedClientType) {
+      case 'Industries':
+        return {
+          title: 'Industrial Equipment Erection',
+          description: 'Professional erection of heavy machinery and industrial equipment with precision and care.',
+          features: [
+            'Safe and efficient equipment erection',
+            'Precision alignment and calibration',
+            'Full compliance with industrial standards',
+            'Expert handling of complex machinery'
+          ],
+          service: 'industrial-equipment-erection'
+        };
+        
+      case 'Hospitals':
+        return {
+          title: 'Medical Equipment Erection',
+          description: 'Specialized erection services for sensitive and complex medical equipment.',
+          features: [
+            'Clean room standards compliance',
+            'Precision erection of diagnostic equipment',
+            'Minimal disruption to healthcare facilities',
+            'Calibration and testing included'
+          ],
+          service: 'medical-equipment-erection'
+        };
+        
+      case 'Manufacturers':
+        return {
+          title: 'Manufacturing Equipment Erection',
+          description: 'Complete production line and manufacturing equipment erection services.',
+          features: [
+            'Assembly line optimization',
+            'Production equipment integration',
+            'Robotic system erection',
+            'Performance testing and validation'
+          ],
+          service: 'industrial-equipment-erection'
+        };
+        
+      case 'Data Centers':
+        return {
+          title: 'Data Center Equipment Erection',
+          description: 'Precise erection of sensitive server racks, cooling systems, and data infrastructure.',
+          features: [
+            'Server rack erection and alignment',
+            'Cooling system integration',
+            'Cable management infrastructure',
+            'Environmental control system setup'
+          ],
+          service: 'data-center-equipment-erection'
+        };
+        
+      case 'Factories':
+        return {
+          title: 'Factory Setup & Equipment Erection',
+          description: 'Complete factory setup including heavy machinery erection and production line integration.',
+          features: [
+            'Turn-key factory setup solutions',
+            'Equipment layout optimization',
+            'Production workflow integration',
+            'Safety system implementation'
+          ],
+          service: 'factory-setup'
+        };
+        
+      default:
+        return {
+          title: 'Equipment Erection Services',
+          description: 'Professional erection services for all types of industrial and commercial equipment.',
+          features: [
+            'Expert equipment handling',
+            'Safety-first approach',
+            '24/7 service availability',
+            'Experienced technical team'
+          ],
+          service: 'heavy-equipment-erection'
+        };
+    }
+  };
+
+  const featuredContent = getFeaturedContent();
+
   return (
     <>
-      {/* Page Header */}
-      <section className="bg-gradient-to-r from-blue-900 to-blue-800 py-20 text-white">
-        <div className="container">
-          <h1 className="text-4xl md:text-5xl font-bold">Our Services</h1>
-          <p className="mt-4 max-w-xl text-blue-100">
-            SAI VINAYAKA ENTERPRISES offers a comprehensive range of equipment erection
-            services tailored to meet the specific needs of various industries.
-          </p>
+      {/* Hero Section */}
+      <section className="relative min-h-[80vh] flex items-center bg-gradient-to-r from-blue-900 to-blue-800 overflow-hidden">
+        {/* Background Image with Overlay */}
+        <div className="absolute inset-0 z-0">
+          <Image 
+            src="/images/hero-image.jpg"
+            alt="Industrial equipment erection" 
+            fill
+            priority
+            style={{ objectFit: 'cover', objectPosition: 'center' }}
+          />
+          <div className="absolute inset-0 bg-blue-900/70"></div>
+        </div>
+
+        <div className="container relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <div className="text-white">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
+                Professional Equipment 
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-200 to-white"> Erection </span> 
+                Services
+              </h1>
+              
+              <div className="h-10 mt-4">
+                <h2 className="text-xl md:text-2xl font-medium">
+                  Trusted by <span className="text-blue-300">{clientTypes[currentClientType]}</span> Since 2022
+                </h2>
+              </div>
+              
+              <p className="mt-4 text-blue-100 max-w-lg">
+                SAI VINAYAKA ENTERPRISES delivers cutting-edge equipment erection services 
+                with precision and expertise for all industrial, medical, and data center needs.
+              </p>
+              
+              <div className="mt-8 flex flex-col sm:flex-row gap-4">
+                <Button 
+                  size="lg" 
+                  className="bg-white text-blue-900 hover:bg-blue-50"
+                  onClick={() => openServiceRequest()}
+                >
+                  Request a Quote
+                </Button>
+                <Link href="/services">
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    className="border-white text-white hover:bg-white/10"
+                  >
+                    Our Services <ChevronRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            
+            <div className="hidden lg:block">
+              {/* This div is intentionally left empty for future content */}
+            </div>
+          </div>
         </div>
       </section>
-      
-      {/* Services Navigation */}
-      <section className="py-8 bg-white border-b">
+
+      {/* Client Type Selection */}
+      <section className="py-8 bg-white">
         <div className="container">
-          <div className="flex flex-wrap gap-2">
-            {services.map((service) => (
-              <button
-                key={service.id}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  selectedService.id === service.id
-                    ? 'bg-blue-600 text-white'
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+            {clientTypes.map((type) => (
+              <div 
+                key={type}
+                className={`cursor-pointer p-4 rounded-lg text-center transition-all ${
+                  selectedClientType === type 
+                    ? 'bg-blue-600 text-white shadow-lg' 
                     : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                 }`}
-                onClick={() => setSelectedService(service)}
+                onClick={() => setSelectedClientType(type)}
               >
-                {service.title}
-              </button>
+                <h3 className="font-medium">{type}</h3>
+              </div>
             ))}
           </div>
         </div>
       </section>
-      
-      {/* Selected Service Detail */}
-      <section className="py-16">
+
+      {/* Featured Service */}
+      <section className="py-16 bg-gray-50">
         <div className="container">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-            {/* Service Information */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl font-bold mb-4">{selectedService.title}</h2>
-              <p className="text-gray-700 mb-6">{selectedService.description}</p>
+              <h2 className="text-3xl font-bold mb-4">{featuredContent.title}</h2>
+              <p className="text-gray-700 mb-6">{featuredContent.description}</p>
               
-              <div className="mb-8">
-                <h3 className="text-xl font-semibold mb-4">Key Features</h3>
-                <ul className="space-y-3">
-                  {selectedService.features.map((feature, index) => (
-                    <li key={index} className="flex items-start">
-                      <CheckCircle2 className="h-5 w-5 text-blue-600 mr-2 flex-shrink-0 mt-0.5" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              
-              <div className="mb-8">
-                <h3 className="text-xl font-semibold mb-4">Benefits</h3>
-                <ul className="space-y-3">
-                  {selectedService.benefits.map((benefit, index) => (
-                    <li key={index} className="flex items-start">
-                      <CheckCircle2 className="h-5 w-5 text-blue-600 mr-2 flex-shrink-0 mt-0.5" />
-                      <span>{benefit}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <ul className="space-y-3 mb-8">
+                {featuredContent.features.map((feature, index) => (
+                  <li key={index} className="flex items-start">
+                    <CheckCircle2 className="h-5 w-5 text-blue-600 mr-2 flex-shrink-0 mt-0.5" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
               
               <Button 
                 className="bg-blue-600 hover:bg-blue-700"
-                onClick={() => openServiceRequest(selectedService.id)}
+                onClick={() => openServiceRequest(featuredContent.service)}
               >
-                Request This Service <ChevronRight className="ml-2 h-4 w-4" />
+                Request This Service
               </Button>
             </div>
             
-            {/* Service Image */}
-            <div className="relative h-80 md:h-96 rounded-lg overflow-hidden shadow-xl">
+            <div className="relative h-72 md:h-96 rounded-lg overflow-hidden shadow-lg">
               <Image 
-                src={selectedService.imageUrl}
-                alt={selectedService.title} 
+                src={
+                  selectedClientType === 'Industries' ? '/images/industrial-equipment.jpeg' :
+                  selectedClientType === 'Hospitals' ? '/images/medical-equipment.jpeg' :
+                  selectedClientType === 'Data Centers' ? '/images/data-center.jpeg' :
+                  selectedClientType === 'Factories' ? '/images/factory-setup.jpeg' :
+                  '/images/equipment-erection.jpeg'
+                }
+                alt={featuredContent.title}
                 fill
                 style={{ objectFit: 'cover', objectPosition: 'center' }}
               />
@@ -215,106 +243,53 @@ export default function Services() {
           </div>
         </div>
       </section>
-      
-      {/* Process Overview */}
-      <section className="py-16 bg-gray-50">
+
+      {/* Why Choose Us */}
+      <section className="py-16 bg-white">
         <div className="container">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Our Service Process</h2>
+            <h2 className="text-3xl font-bold mb-4">Why Choose SAI VINAYAKA ENTERPRISES</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              We follow a structured approach to deliver high-quality equipment erection services
-              that meet your specific requirements.
+              We deliver excellence in equipment erection with our experienced team, 
+              advanced techniques, and commitment to safety and quality.
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
-                step: '01',
-                title: 'Consultation',
-                description: 'We begin with a thorough consultation to understand your equipment erection needs and project requirements.'
+                title: 'Experienced Team',
+                description: 'Our technicians have years of specialized experience in equipment erection across multiple industries.'
               },
               {
-                step: '02',
-                title: 'Planning',
-                description: 'Our team develops a detailed plan for your equipment erection project, including timeline, resources, and safety protocols.'
+                title: '24/7 Availability',
+                description: 'We provide round-the-clock service 365 days a year to meet your urgent equipment erection needs.'
               },
               {
-                step: '03',
-                title: 'Execution',
-                description: 'We carry out the equipment erection process with precision, following industry best practices and safety standards.'
+                title: 'Safety Standards',
+                description: 'We maintain the highest safety standards during all equipment erection and setup operations.'
               },
               {
-                step: '04',
-                title: 'Quality Assurance',
-                description: 'Final testing and verification ensure your erected equipment meets all operational requirements and specifications.'
+                title: 'Comprehensive Service',
+                description: 'From planning to final testing, we handle every aspect of your equipment erection project.'
               }
             ].map((item, index) => (
-              <div key={index} className="relative p-6 bg-white rounded-lg shadow-md border-t-4 border-blue-600">
-                <div className="absolute -top-4 -right-4 bg-blue-600 text-white h-12 w-12 rounded-full flex items-center justify-center text-xl font-bold">
-                  {item.step}
-                </div>
-                <h3 className="text-xl font-semibold mb-3 mt-2">{item.title}</h3>
+              <div key={index} className="p-6 border rounded-lg hover:shadow-md transition-shadow">
+                <h3 className="text-xl font-semibold mb-3">{item.title}</h3>
                 <p className="text-gray-600">{item.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
-      
-      {/* Industries We Serve */}
-      <section className="py-16">
-        <div className="container">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Industries We Serve</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Our equipment erection services cater to a diverse range of industries, each with unique requirements and specifications.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                title: 'Manufacturing',
-                description: 'Equipment erection for production lines, assembly stations, and factory automation systems.'
-              },
-              {
-                title: 'Healthcare',
-                description: 'Medical equipment erection services for hospitals, clinics, and diagnostic centers.'
-              },
-              {
-                title: 'Technology',
-                description: 'Data center equipment erection including server racks, cooling systems, and network infrastructure.'
-              },
-              {
-                title: 'Heavy Industry',
-                description: 'Erection of large-scale industrial equipment, machinery, and production systems.'
-              },
-              {
-                title: 'Pharmaceutical',
-                description: 'Specialized equipment erection for pharmaceutical manufacturing and laboratory environments.'
-              },
-              {
-                title: 'Food & Beverage',
-                description: 'Equipment erection for food processing, packaging, and production facilities.'
-              }
-            ].map((industry, index) => (
-              <div key={index} className="p-6 bg-white rounded-lg border hover:shadow-md transition-shadow">
-                <h3 className="text-xl font-semibold mb-3">{industry.title}</h3>
-                <p className="text-gray-600">{industry.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-      
-      {/* Call to Action */}
+
+      {/* CTA Section */}
       <section className="py-16 bg-gradient-to-r from-blue-800 to-blue-900 text-white">
         <div className="container text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to Start Your Project?</h2>
           <p className="max-w-2xl mx-auto mb-8">
-            Contact SAI VINAYAKA ENTERPRISES today to discuss your equipment erection needs. 
-            Our team is ready to provide you with professional service and expert solutions.
+            Contact us today to discuss your equipment erection needs. Our team is ready to 
+            provide you with professional service and expert solutions.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
@@ -324,14 +299,15 @@ export default function Services() {
             >
               Request a Quote
             </Button>
-            <Button 
-              variant="outline" 
-              size="lg" 
-              className="border-white text-white hover:bg-white/10"
-              onClick={() => window.location.href = '/contact'}
-            >
-              Contact Us <ChevronRight className="ml-2 h-4 w-4" />
-            </Button>
+            <Link href="/contact">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="border-white text-white hover:bg-white/10"
+              >
+                Contact Us <ChevronRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
