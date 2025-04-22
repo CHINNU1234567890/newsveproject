@@ -8,19 +8,25 @@ import { createTransport } from 'nodemailer';
 function createTransporter() {
   // Check for required email configuration
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    throw new Error('Email credentials are not configured. Set EMAIL_USER and EMAIL_PASS environment variables.');
+    console.error('Email credentials are not configured. Set EMAIL_USER and EMAIL_PASS environment variables.');
+    return null;
   }
 
-  // Create a transporter using SMTP
-  const transporter = createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
+  try {
+    // Create a transporter using SMTP
+    const transporter = createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
 
-  return transporter;
+    return transporter;
+  } catch (error) {
+    console.error('Failed to create email transporter:', error);
+    return null;
+  }
 }
 
 interface EmailData {
@@ -40,6 +46,12 @@ interface EmailData {
 export const sendNotificationEmail = async (data: EmailData): Promise<boolean> => {
   try {
     const transporter = createTransporter();
+    
+    // If transporter couldn't be created, log the issue and store the contact data anyway
+    if (!transporter) {
+      console.error('Cannot send notification email: Email transporter not available');
+      return false;
+    }
     
     // Email content to be sent to business
     const mailOptions = {
@@ -85,6 +97,12 @@ export const sendNotificationEmail = async (data: EmailData): Promise<boolean> =
 export const sendConfirmationEmail = async (data: EmailData): Promise<boolean> => {
   try {
     const transporter = createTransporter();
+    
+    // If transporter couldn't be created, log the issue and store the contact data anyway
+    if (!transporter) {
+      console.error('Cannot send confirmation email: Email transporter not available');
+      return false;
+    }
     
     const serviceNames: {[key: string]: string} = {
       'heavy-equipment-erection': 'Heavy Equipment Erection',
@@ -153,6 +171,12 @@ export const sendConfirmationEmail = async (data: EmailData): Promise<boolean> =
 export const sendTestEmail = async (receiverEmail: string): Promise<boolean> => {
   try {
     const transporter = createTransporter();
+    
+    // If transporter couldn't be created, log the issue
+    if (!transporter) {
+      console.error('Cannot send test email: Email transporter not available');
+      return false;
+    }
     
     // Email content for test
     const mailOptions = {
