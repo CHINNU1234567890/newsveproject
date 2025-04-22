@@ -112,7 +112,7 @@ export default function About() {
             
             <div className="relative h-80 md:h-96 rounded-lg overflow-hidden shadow-xl">
               <Image 
-                src="/images/about-image.jpeg"
+                src="/images/hero-image.jpeg"
                 alt="SAI VINAYAKA ENTERPRISES team at work" 
                 fill
                 style={{ objectFit: 'cover', objectPosition: 'center' }}
