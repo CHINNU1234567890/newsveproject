@@ -44,6 +44,7 @@ export default function Contact() {
   // Handle form submission
   const onSubmit = async (data: z.infer<typeof contactFormSchema>) => {
     setIsSubmitting(true);
+    let errorMessage = 'There was an error submitting your message. Please try again or call us directly at +91-9550222151.';
     
     try {
       const response = await fetch('/api/contact', {
@@ -54,7 +55,20 @@ export default function Contact() {
         body: JSON.stringify(data),
       });
       
-      const result = await response.json();
+      // Always attempt to parse response, but handle parse errors gracefully
+      let result;
+      try {
+        result = await response.json();
+        console.log('Form submission response:', result);
+        
+        // Store the error message if provided by the server
+        if (result.message && !response.ok) {
+          errorMessage = result.message;
+        }
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError);
+        // If we can't parse the response, we'll use the default error message
+      }
       
       if (response.ok) {
         setIsSuccess(true);
@@ -64,14 +78,35 @@ export default function Contact() {
           description: 'Thank you for contacting us. We will get back to you soon.',
         });
       } else {
-        throw new Error(result.message || 'Failed to send message');
+        // Handle specific HTTP error codes
+        if (response.status === 400) {
+          // Validation error
+          throw new Error(errorMessage || 'Please check your form inputs and try again.');
+        } else if (response.status === 429) {
+          // Rate limiting
+          throw new Error('Too many requests. Please try again later.');
+        } else if (response.status >= 500) {
+          // Server error
+          throw new Error('Our server is experiencing issues. Please try again later or contact us by phone: +91-9550222151');
+        } else {
+          // Other errors
+          throw new Error(errorMessage);
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending contact form:', error);
+      
+      // Display error message to user
       toast({
         title: 'Message failed to send',
-        description: 'There was an error sending your message. Please try again.',
+        description: error.message || errorMessage,
         variant: 'destructive',
+      });
+      
+      // Error UI indicator for better user feedback
+      form.setError('root', { 
+        type: 'server', 
+        message: 'Form submission failed. Please try again or contact us by phone at +91-9550222151.'
       });
     } finally {
       setIsSubmitting(false);
@@ -195,6 +230,23 @@ export default function Contact() {
               ) : (
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    {/* Display global error message from form.formState.errors.root */}
+                    {form.formState.errors.root && (
+                      <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md mb-4">
+                        <div className="flex items-start">
+                          <div className="flex-shrink-0">
+                            <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <div className="ml-3">
+                            <p className="text-sm">{form.formState.errors.root.message}</p>
+                            <p className="mt-1 text-xs">Please try again or contact us directly at +91-9550222151</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <FormField
                         control={form.control}
