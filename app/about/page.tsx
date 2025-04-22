@@ -115,7 +115,7 @@ export default function About() {
                 src="/images/hero-image.jpeg"
                 alt="SAI VINAYAKA ENTERPRISES team at work" 
                 fill
-                style={{ objectFit: 'cover', objectPosition: 'center' }}
+                style={{ objectFit: 'contain', objectPosition: 'center' }}
               />
             </div>
           </div>
