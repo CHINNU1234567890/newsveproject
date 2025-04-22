@@ -79,7 +79,7 @@ export default function Header() {
             <div className="relative group">
               <button 
                 className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  pathname.startsWith('/services') 
+                  pathname?.startsWith('/services') 
                     ? isScrolled 
                       ? 'text-blue-600' 
                       : 'text-white bg-white/20' 
