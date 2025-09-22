@@ -142,7 +142,7 @@ export default function Header() {
                 </a>
                 <Button
                   onClick={() => openServiceRequest()}
-                  className="hidden lg:inline-flex lg:bg-blue-600 hover:bg-blue-700 lg:text-white"
+                  className="hidden lg:flex lg:bg-blue-600 hover:bg-blue-700 lg:text-white"
                 >
                   Request Service
                 </Button>
