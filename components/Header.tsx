@@ -61,7 +61,7 @@ export default function Header() {
               </div>
               <div>
                 <h1 className={`font-bold text-xl md:text-2xl ${isScrolled ? 'text-blue-900' : 'text-white'}`}>
-                  SAI VINAYAKA
+                  Vcrazy VINAYAKA
                 </h1>
                 <p className={`text-xs font-medium ${isScrolled ? 'text-blue-700' : 'text-blue-100'}`}>
                   ENTERPRISES
