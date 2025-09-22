@@ -14,19 +14,18 @@ export default function Header() {
   const pathname = usePathname();
   const { openServiceRequest } = useServiceRequest();
 
-  // Scroll effect for header background
+  // Scroll effect
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close mobile menu when route changes
+  // Close mobile menu on route change
   useEffect(() => {
     setIsMenuOpen(false);
   }, [pathname]);
 
-  // Services dropdown items
   const services = [
     { name: 'Heavy Equipment Erection', href: '/services#heavy-equipment-erection' },
     { name: 'Industrial Equipment Erection', href: '/services#industrial-equipment-erection' },
@@ -43,14 +42,12 @@ export default function Header() {
       }`}
     >
       <div className="container mx-auto px-4">
-        {/* Main Header */}
-        <div className="flex items-center justify-between h-16 lg:h-20 flex-wrap gap-x-2">
+        {/* Header Row */}
+        <div className="flex items-center justify-between h-16 lg:h-20 gap-x-2">
           {/* Logo */}
-          <Link href="/" className="relative z-10 flex items-center">
-            <div className="relative h-10 w-10 mr-2 lg:h-12 lg:w-12 lg:mr-3">
-              <div className="bg-gradient-to-br from-blue-700 to-blue-500 h-full w-full rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm lg:text-lg">SVE</span>
-              </div>
+          <Link href="/" className="flex items-center z-50">
+            <div className="h-10 w-10 mr-2 lg:h-12 lg:w-12 lg:mr-3 bg-gradient-to-br from-blue-700 to-blue-500 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-sm lg:text-lg">SVE</span>
             </div>
             <div>
               <h1
@@ -70,14 +67,15 @@ export default function Header() {
             </div>
           </Link>
 
-          {/* Right side actions */}
+          {/* Right side */}
           <div className="flex items-center gap-x-3">
-            {/* Desktop Navigation */}
+            {/* Desktop nav */}
             <nav className="hidden lg:flex items-center space-x-1">
               <NavLink href="/" active={pathname === '/'} isScrolled={isScrolled}>
                 Home
               </NavLink>
 
+              {/* Services dropdown */}
               <div className="relative group">
                 <button
                   className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -97,15 +95,10 @@ export default function Header() {
                   <ChevronDown className="ml-1 h-4 w-4" />
                 </button>
 
-                {/* Services Dropdown */}
                 <div
                   className={`absolute left-0 mt-1 w-64 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 transition-all ${
-                    isServicesOpen
-                      ? 'opacity-100 scale-100'
-                      : 'opacity-0 scale-95 pointer-events-none'
+                    isServicesOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
                   }`}
-                  onMouseEnter={() => setIsServicesOpen(true)}
-                  onMouseLeave={() => setIsServicesOpen(false)}
                 >
                   <div className="py-1">
                     {services.map((service) => (
@@ -147,7 +140,6 @@ export default function Header() {
                   <Phone className="h-4 w-4 mr-1.5" />
                   +91-9550222151
                 </a>
-
                 <Button
                   onClick={() => openServiceRequest()}
                   className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -157,15 +149,14 @@ export default function Header() {
               </div>
             </nav>
 
-            {/* Mobile Actions */}
-            <div className="lg:hidden flex items-center gap-x-3">
+            {/* Mobile actions */}
+            <div className="lg:hidden flex items-center gap-x-3 z-50">
               <a
                 href="tel:+919550222151"
                 className={`${isScrolled ? 'text-blue-600' : 'text-white'}`}
               >
                 <Phone className="h-5 w-5" />
               </a>
-
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className={`p-2 rounded-md ${isScrolled ? 'text-gray-700' : 'text-white'}`}
@@ -177,7 +168,7 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile menu */}
       <div
         className={`lg:hidden fixed top-16 left-0 w-full bg-white shadow-md transition-transform duration-300 ease-in-out z-40 ${
           isMenuOpen ? 'translate-y-0' : '-translate-y-full'
@@ -196,12 +187,9 @@ export default function Header() {
               >
                 <span>Services</span>
                 <ChevronDown
-                  className={`h-4 w-4 transition-transform ${
-                    isServicesOpen ? 'rotate-180' : ''
-                  }`}
+                  className={`h-4 w-4 transition-transform ${isServicesOpen ? 'rotate-180' : ''}`}
                 />
               </button>
-
               <div className={`pl-4 space-y-1 ${isServicesOpen ? 'block' : 'hidden'}`}>
                 {services.map((service) => (
                   <Link
@@ -240,10 +228,10 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Overlay when mobile menu is open */}
+      {/* Dim overlay */}
       {isMenuOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/20 z-30"
+          className="lg:hidden fixed inset-0 bg-black/30 z-30"
           onClick={() => setIsMenuOpen(false)}
         />
       )}
@@ -251,7 +239,7 @@ export default function Header() {
   );
 }
 
-// Desktop Navigation Link
+// Desktop NavLink
 function NavLink({
   href,
   active,
@@ -281,7 +269,7 @@ function NavLink({
   );
 }
 
-// Mobile Navigation Link
+// Mobile NavLink
 function MobileNavLink({
   href,
   active,
