@@ -73,7 +73,7 @@ export default function Header() {
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-1">
             <NavLink href="/" active={pathname === '/'} isScrolled={isScrolled}>
-              Home
+              Heythere
             </NavLink>
             
             <div className="relative group">
