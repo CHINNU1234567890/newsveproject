@@ -14,21 +14,18 @@ export default function Header() {
   const pathname = usePathname();
   const { openServiceRequest } = useServiceRequest();
 
-  // Handle scroll effect for transparent header
+  // Scroll effect
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close mobile menu when route changes
+  // Close mobile menu on route change
   useEffect(() => {
     setIsMenuOpen(false);
   }, [pathname]);
 
-  // Services dropdown items
   const services = [
     { name: 'Heavy Equipment Erection', href: '/services#heavy-equipment-erection' },
     { name: 'Industrial Equipment Erection', href: '/services#industrial-equipment-erection' },
@@ -41,11 +38,13 @@ export default function Header() {
   return (
     <header
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-white shadow-md' : 'bg-transparent'
+        isScrolled
+          ? 'bg-white shadow-md'
+          : 'bg-[url(/path/to/bg.jpg)] bg-cover bg-center'
       }`}
     >
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16 lg:h-20 flex-wrap gap-x-2">
+        <div className="flex items-center justify-between h-16 lg:h-20 flex-wrap gap-x-2 min-h-[64px] lg:min-h-[80px]">
           {/* Logo */}
           <Link href="/" className="relative z-10 flex items-center">
             <div className="relative h-10 w-10 mr-2 lg:h-12 lg:w-12 lg:mr-3">
@@ -54,18 +53,10 @@ export default function Header() {
               </div>
             </div>
             <div>
-              <h1
-                className={`font-bold text-lg lg:text-2xl ${
-                  isScrolled ? 'text-blue-900' : 'text-white'
-                }`}
-              >
+              <h1 className={`font-bold text-lg lg:text-2xl ${isScrolled ? 'text-blue-900' : 'text-white'}`}>
                 SAI VINAYAKA
               </h1>
-              <p
-                className={`text-[10px] lg:text-xs font-medium ${
-                  isScrolled ? 'text-blue-700' : 'text-blue-100'
-                }`}
-              >
+              <p className={`text-[10px] lg:text-xs font-medium ${isScrolled ? 'text-blue-700' : 'text-blue-100'}`}>
                 ENTERPRISES
               </p>
             </div>
@@ -101,9 +92,7 @@ export default function Header() {
                 {/* Services Dropdown */}
                 <div
                   className={`absolute left-0 mt-1 w-64 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none transition-all ${
-                    isServicesOpen
-                      ? 'opacity-100 scale-100'
-                      : 'opacity-0 scale-95 pointer-events-none'
+                    isServicesOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
                   }`}
                   onMouseEnter={() => setIsServicesOpen(true)}
                   onMouseLeave={() => setIsServicesOpen(false)}
@@ -118,7 +107,6 @@ export default function Header() {
                         {service.name}
                       </Link>
                     ))}
-
                     <Link
                       href="/services"
                       className="block px-4 py-2 text-sm text-blue-600 font-medium border-t border-gray-100 hover:bg-blue-50"
@@ -166,18 +154,14 @@ export default function Header() {
             <div className="lg:hidden flex items-center gap-x-3">
               <a
                 href="tel:+919550222151"
-                className={`flex items-center ${
-                  isScrolled ? 'text-blue-600' : 'text-white'
-                }`}
+                className={`flex items-center ${isScrolled ? 'text-blue-600' : 'text-white'}`}
               >
                 <Phone className="h-5 w-5" />
               </a>
 
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className={`p-2 rounded-md ${
-                  isScrolled ? 'text-gray-700' : 'text-white'
-                }`}
+                className={`p-2 rounded-md ${isScrolled ? 'text-gray-700' : 'text-white'}`}
               >
                 {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </button>
@@ -188,12 +172,12 @@ export default function Header() {
 
       {/* Mobile Menu */}
       <div
-        className={`lg:hidden absolute top-full left-0 w-full bg-white shadow-md transition-transform duration-300 ease-in-out ${
+        className={`lg:hidden absolute top-full left-0 w-full bg-white shadow-md transform transition-transform duration-300 ease-in-out ${
           isMenuOpen ? 'translate-y-0' : '-translate-y-full'
         }`}
       >
         <div className="container mx-auto px-4 py-4">
-          <nav className="flex flex-col">
+          <nav className="flex flex-col space-y-1">
             <MobileNavLink href="/" active={pathname === '/'}>
               Home
             </MobileNavLink>
@@ -205,9 +189,7 @@ export default function Header() {
               >
                 <span>Services</span>
                 <ChevronDown
-                  className={`h-4 w-4 transition-transform ${
-                    isServicesOpen ? 'rotate-180' : ''
-                  }`}
+                  className={`h-4 w-4 transition-transform ${isServicesOpen ? 'rotate-180' : ''}`}
                 />
               </button>
 
@@ -250,18 +232,8 @@ export default function Header() {
   );
 }
 
-// Desktop Navigation Link component
-function NavLink({
-  href,
-  active,
-  isScrolled,
-  children,
-}: {
-  href: string;
-  active: boolean;
-  isScrolled: boolean;
-  children: React.ReactNode;
-}) {
+// Desktop Navigation Link
+function NavLink({ href, active, isScrolled, children }: { href: string; active: boolean; isScrolled: boolean; children: React.ReactNode }) {
   return (
     <Link
       href={href}
@@ -280,16 +252,8 @@ function NavLink({
   );
 }
 
-// Mobile Navigation Link component
-function MobileNavLink({
-  href,
-  active,
-  children,
-}: {
-  href: string;
-  active: boolean;
-  children: React.ReactNode;
-}) {
+// Mobile Navigation Link
+function MobileNavLink({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
   return (
     <Link
       href={href}
